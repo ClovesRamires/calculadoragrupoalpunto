@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Gastos</title>
+    <style>
+        /* Estilos CSS */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff; /* Fondo blanco */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #000000; /* Letras negras */
+        }
+
+        .container {
+            background-color: #ffffff; /* Fondo blanco */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px; /* Ancho máximo para pantallas grandes */
+            border: 1px solid #ccc; /* Borde para resaltar el contenedor */
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #000000; /* Letras negras */
+            font-weight: bold; /* Negrita */
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold; /* Negrita */
+            color: #000000; /* Letras negras */
+        }
+
+        input {
+            margin-bottom: 15px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-weight: bold; /* Negrita */
+            color: #000000; /* Letras negras */
+            width: 100%; /* Ocupar todo el ancho disponible */
+        }
+
+        button {
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            font-weight: bold; /* Negrita */
+            width: 100%; /* Ocupar todo el ancho disponible */
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #resultados {
+            margin-top: 20px;
+        }
+
+        #resultados p {
+            margin: 5px 0;
+            font-weight: bold; /* Negrita */
+            color: #000000; /* Letras negras */
+        }
+
+        /* Media Queries para diseño responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 24px; /* Tamaño de fuente más pequeño para móviles */
+            }
+
+            h2 {
+                font-size: 20px; /* Tamaño de fuente más pequeño para móviles */
+            }
+
+            input, button {
+                padding: 10px; /* Más padding para facilitar la interacción en móviles */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Gastos</h1>
+        <form id="expenseForm">
+            <!-- Campo para la fecha -->
+            <label for="fecha">Fecha:</label>
+            <input type="date" id="fecha" required>
+
+            <label for="totalCaja">Total Caja:</label>
+            <input type="number" step="0.01" id="totalCaja" required>
+
+            <label for="gastosCaja">Total Gastos de Caja:</label>
+            <input type="number" step="0.01" id="gastosCaja" required>
+
+            <label for="gastosTransferencia">Total Gastos por Transferencia:</label>
+            <input type="number" step="0.01" id="gastosTransferencia" required>
+
+            <label for="totalVisas">Total Visas:</label>
+            <input type="number" step="0.01" id="totalVisas" required>
+
+            <label for="retiraBodyFit">Retira Body Fit:</label>
+            <input type="number" step="0.01" id="retiraBodyFit" required>
+
+            <label for="retiraJoseSanchez">Retira Jose Sanchez:</label>
+            <input type="number" step="0.01" id="retiraJoseSanchez" required>
+
+            <label for="comidasJuanAdan">Comidas Juan Adan:</label>
+            <input type="number" step="0.01" id="comidasJuanAdan" required>
+
+            <label for="comidasJoseSanchez">Comida Jose Sanchez:</label>
+            <input type="number" step="0.01" id="comidasJoseSanchez" required>
+
+            <button type="submit">Guardar Datos</button>
+        </form>
+
+        <h2>Buscar por Fecha</h2>
+        <form id="searchForm">
+            <label for="searchFecha">Fecha:</label>
+            <input type="date" id="searchFecha" required>
+            <button type="submit">Buscar</button>
+        </form>
+
+        <h2>Resultados</h2>
+        <div id="resultados">
+            <!-- Los resultados se mostrarán aquí -->
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
+    <script>
+        // Configuración de Firebase (reemplaza con tus credenciales)
+        const firebaseConfig = {
+            apiKey: "apiKey: "AIzaSyAKNJQ0UJBtYoheIY3HklODSXd0FPofEiQ",",
+            authDomain: "control-grupo-alpunto.firebaseapp.com",
+            projectId: "control-grupo-alpunto",
+            storageBucket: "control-grupo-alpunto.firebasestorage.app",
+            messagingSenderId: "508483913073",
+            appId: "508483913073:web:fc3c3b56db0a303a20e2d"
+        };
+
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Función para formatear números como moneda en euros
+        function formatoMoneda(valor) {
+            return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(valor);
+        }
+
+        // Guardar datos en Firestore
+        document.getElementById('expenseForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita que el formulario se envíe
+
+            // Obtener los valores de los inputs
+            const fecha = document.getElementById('fecha').value;
+            const totalCaja = parseFloat(document.getElementById('totalCaja').value) || 0;
+            const gastosCaja = parseFloat(document.getElementById('gastosCaja').value) || 0;
+            const gastosTransferencia = parseFloat(document.getElementById('gastosTransferencia').value) || 0;
+            const totalVisas = parseFloat(document.getElementById('totalVisas').value) || 0;
+            const retiraBodyFit = parseFloat(document.getElementById('retiraBodyFit').value) || 0;
+            const retiraJoseSanchez = parseFloat(document.getElementById('retiraJoseSanchez').value) || 0;
+            const comidasJuanAdan = parseFloat(document.getElementById('comidasJuanAdan').value) || 0;
+            const comidasJoseSanchez = parseFloat(document.getElementById('comidasJoseSanchez').value) || 0;
+
+            // Calcular el total final
+            const totalFinal = totalCaja - (gastosCaja + gastosTransferencia);
+
+            // Guardar en Firestore
+            db.collection('gastos').add({
+                fecha,
+                totalCaja,
+                gastosCaja,
+                gastosTransferencia,
+                totalVisas,
+                retiraBodyFit,
+                retiraJoseSanchez,
+                comidasJuanAdan,
+                comidasJoseSanchez,
+                totalFinal
+            })
+            .then(() => {
+                alert('Datos guardados correctamente.');
+                document.getElementById('expenseForm').reset(); // Limpiar el formulario
+            })
+            .catch((error) => {
+                console.error('Error al guardar los datos: ', error);
+            });
+        });
+
+        // Buscar datos por fecha
+        document.getElementById('searchForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita que el formulario se envíe
+
+            const searchFecha = document.getElementById('searchFecha').value;
+
+            // Buscar en Firestore
+            db.collection('gastos')
+                .where('fecha', '==', searchFecha)
+                .get()
+                .then((querySnapshot) => {
+                    const resultadosDiv = document.getElementById('resultados');
+                    resultadosDiv.innerHTML = ''; // Limpiar resultados anteriores
+
+                    if (querySnapshot.empty) {
+                        resultadosDiv.innerHTML = '<p>No se encontraron resultados para la fecha seleccionada.</p>';
+                        return;
+                    }
+
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        resultadosDiv.innerHTML += `
+                            <p>Fecha: ${data.fecha}</p>
+                            <p>Total Caja: ${formatoMoneda(data.totalCaja)}</p>
+                            <p>Total Gastos de Caja: ${formatoMoneda(data.gastosCaja)}</p>
+                            <p>Total Gastos por Transferencia: ${formatoMoneda(data.gastosTransferencia)}</p>
+                            <p>Total Visas: ${formatoMoneda(data.totalVisas)}</p>
+                            <p>Retira Body Fit: ${formatoMoneda(data.retiraBodyFit)}</p>
+                            <p>Retira Jose Sanchez: ${formatoMoneda(data.retiraJoseSanchez)}</p>
+                            <p>Comidas Juan Adan: ${formatoMoneda(data.comidasJuanAdan)}</p>
+                            <p>Comida Jose Sanchez: ${formatoMoneda(data.comidasJoseSanchez)}</p>
+                            <p>Total Final: ${formatoMoneda(data.totalFinal)}</p>
+                            <hr>
+                        `;
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error al buscar los datos: ', error);
+                });
+        });
+    </script>
+</body>
+</html>
