@@ -148,21 +148,26 @@
         <div id="resultados">
             <!-- Los resultados se mostrarán aquí -->
         </div>
+
+        <button id="exportExcel">Exportar a Excel</button>
     </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <!-- SheetJS para exportar a Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
 
     <script>
         // Configuración de Firebase (reemplaza con tus credenciales)
         const firebaseConfig = {
-            apiKey: "apiKey: "AIzaSyAKNJQ0UJBtYoheIY3HklODSXd0FPofEiQ",",
-            authDomain: "control-grupo-alpunto.firebaseapp.com",
-            projectId: "control-grupo-alpunto",
-            storageBucket: "control-grupo-alpunto.firebasestorage.app",
-            messagingSenderId: "508483913073",
-            appId: "508483913073:web:fc3c3b56db0a303a20e2d"
+            apiKey: "AIzaSyAkQEPUy-W6KgNTpAQn1KfqfnO4WybgSj8",
+            authDomain: "calculadora-alpunto.firebaseapp.com",
+            projectId: "calculadora-alpunto",
+            storageBucket: "calculadora-alpunto.firebasestorage.app",
+            messagingSenderId: "949675145064",
+            appId: "1:949675145064:web:ed0d39215a1ae3d0ff88dd",
+			measurementId: "G-9J4H61FMX9"
         };
 
         // Inicializar Firebase
@@ -254,6 +259,46 @@
                     console.error('Error al buscar los datos: ', error);
                 });
         });
+
+        // Exportar a Excel
+        document.getElementById('exportExcel').addEventListener('click', function() {
+            // Obtener todos los datos de Firestore
+            db.collection('gastos')
+                .get()
+                .then((querySnapshot) => {
+                    const data = [
+                        ["Fecha", "Total Caja", "Gastos de Caja", "Gastos por Transferencia", "Total Visas", "Retira Body Fit", "Retira Jose Sanchez", "Comidas Juan Adan", "Comida Jose Sanchez", "Total Final"]
+                    ];
+
+                    querySnapshot.forEach((doc) => {
+                        const gasto = doc.data();
+                        data.push([
+                            gasto.fecha,
+                            gasto.totalCaja,
+                            gasto.gastosCaja,
+                            gasto.gastosTransferencia,
+                            gasto.totalVisas,
+                            gasto.retiraBodyFit,
+                            gasto.retiraJoseSanchez,
+                            gasto.comidasJuanAdan,
+                            gasto.comidasJoseSanchez,
+                            gasto.totalFinal
+                        ]);
+                    });
+
+                    // Convertir el array a una hoja de cálculo
+                    const ws = XLSX.utils.aoa_to_sheet(data);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Gastos");
+
+                    // Exportar el archivo Excel
+                    XLSX.writeFile(wb, "gastos.xlsx");
+                })
+                .catch((error) => {
+                    console.error('Error al exportar los datos: ', error);
+                });
+        });
+		
     </script>
 </body>
 </html>
